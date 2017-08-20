@@ -1,0 +1,5 @@
+data/*
+tmp/*
+.config/*
+.DS_Store
+src/*.pyc
