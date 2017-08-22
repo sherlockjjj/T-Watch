@@ -1,4 +1,4 @@
-#run from capstone/
+#run from python src/get_tweets.py
 import tweepy
 from utils import *
 from pymongo import MongoClient
@@ -58,16 +58,19 @@ class MyStreamListener(StreamListener):
             #disconnect the stream
             return False
 
+def construct_filter_query(companies, location=(-122.75,36.8,-121.75,37.8)):
+    companies_str = (",").join(companies)
+    location_str = (",").join(location)
+    lang_str = 'language=en'
+    return
 if __name__ == '__main__':
     #authenticate
-    print consumer_key, consumer_secret
-    print access_token, access_token_secret
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     api = API(auth)
-    searched_topics = ['fitbit', 'tesla', 'uber', 'airbnb']
-    topic_list = ['spacex', 'gopro', 'amazon', 'salesforce', 'oculus']
-    topic = 'tesla'
+    # searched_topics = ['fitbit', 'tesla', 'uber', 'airbnb']
+    # topic_list = ['spacex', 'gopro', 'amazon', 'salesforce', 'oculus']
+    # topic = 'tesla'
 
     #time.sleep(15*60)
     # for topic in topic_list:
@@ -75,6 +78,11 @@ if __name__ == '__main__':
     #     searched_tweets = grab_tweets(topic, max_tweets=10)
     #     write_json_lines_file(searched_tweets, path)
     #     time.sleep(15 * 60)
-    # l = MyStreamListener()
-    # stream = Stream(auth, l)
-    # stream.filter(track=['basketball'])
+    companies = ['Delcath', 'Falconstor', 'Apple', 'Cisco', 'Nvidia', 'Intel', 'Microsoft', 'Starbucks', 'Applied Materials']
+    companies_str = (",").join(companies)
+    #searched_tweets = grab_tweets(topic, max_tweets=10)
+    # print searched_tweets
+    l = MyStreamListener()
+    stream = Stream(auth, l)
+    print "Start Collecting"
+    # stream.filter(track=companies)
