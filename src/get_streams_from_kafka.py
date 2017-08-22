@@ -1,6 +1,6 @@
 import json
 import tweepy
-from kafka import SimpleProducer, KafkaClient
+from kafka import KafkaProducer, KafkaClient
 from tweepy import OAuthHandler, Stream, API
 from tweepy.streaming import StreamListener
 from configparser import ConfigParser
@@ -10,17 +10,18 @@ class TstreamListener(StreamListener):
         self.api = api
         super(StreamListener, self).__init__()
         client = KafkaClient("localhost:9092")
-        self.producer = SimpleProducer(client, async=True, \
-                      batch_send_every_n = 1000, batch_send_every_t=10)
+        self.producer = KafkaProducer(value_serializer=lambda v: json.dumps(v).encode('ascii'))
 
-    def on_status(self, status):
+    def on_data(self, data):
         """
         Called whenever new data arrives from live stream
         """
 
-        msg = status.text.encode('utf-8')
+        #msg = status.text.encode('utf-8')
+        text = json.loads(data)['text'].encode('utf-8')
+        #print text
         try:
-            self.producer.send_messages(b'twitterstream', msg)
+            self.producer.send('twitterstream', text)
         except Exception as e:
             print e
             return False

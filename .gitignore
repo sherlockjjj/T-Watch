@@ -3,3 +3,5 @@ tmp/*
 .config/*
 .DS_Store
 src/*.pyc
+kafka_files/*
+
