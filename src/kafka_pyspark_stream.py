@@ -3,6 +3,10 @@ import sys, os, re
 from pyspark import SparkConf, SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils, OffsetRange, TopicAndPartition
+def txt_to_feature(text):
+    words = re.sub("[^a-zA-Z]", " ", text).lower().split()
+    clean_words = [ps.stem(w) for w in words if not w in stops]
+    return( " ".join(clean_words))
 
 def main():
 
@@ -35,10 +39,14 @@ def main():
     # parsed = stream.map(lambda v: json.loads(v[1]))
     #object_stream = stream.map(lambda x: x[7])
     print "before pprint"
+    count_stream = stream.map(txt_to_feature) \
+                         .map(lambda string: len(str))
 
     stream.pprint()
     ssc.start()
     ssc.awaitTermination()
+
+
 
 if __name__ == '__main__':
     main()
