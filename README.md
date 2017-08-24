@@ -1,10 +1,12 @@
 # capstone
+
 capstone project in progress
+
 Finished:
-Collecting Twitter Stream through Kafka
-Save Kafka output to local
-Trained Sentiment Classification Model on Spark ML 
-Used saved model parameters to predict saved incoming twitter streams
+1. Collecting Twitter Stream through Kafka
+2. Save Kafka output to local
+3. Trained Sentiment Classification Model on Spark ML 
+4. Used saved model parameters to predict saved incoming twitter streams
 
 Difficulty:
 1. Integrate Kafka Stream with Pyspark Streaming
