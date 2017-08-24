@@ -5,3 +5,4 @@ tmp/*
 *.pyc
 kafka_files/*
 src/.ipynb_checkpoints/*
+src/*.pyc
