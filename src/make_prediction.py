@@ -1,20 +1,20 @@
 #python=3.5
 import re
-import pymongo
 import findspark
 findspark.init()
 import pyspark
-from pyspark.sql.functions import col, udf
+import pymongo
 import pymongo_spark
 pymongo_spark.activate()
 from pyspark.sql.types import *
+from pyspark.sql.functions import col, udf
 from pyspark.ml import Pipeline
-from pyspark.ml.feature import Tokenizer, HashingTF, IDF, CountVectorizer, IDFModel, StopWordsRemover
-from pyspark.ml.classification import RandomForestClassifier, LogisticRegression, GBTClassifier, RandomForestClassificationModel
+from pyspark.ml.feature import HashingTF, IDF, IDFModel, StopWordsRemover
+from pyspark.ml.classification import RandomForestClassifier, RandomForestClassificationModel
 from pyspark.ml.evaluation import BinaryClassificationEvaluator, MulticlassClassificationEvaluator
-from pyspark.ml.feature import HashingTF, Tokenizer
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, ParamGridBuilder, TrainValidationSplit
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, TrainValidationSplit
 
+#helper functions
 def filter_ads(text):
     return 'https' not in text
 
@@ -31,14 +31,10 @@ if __name__ == "__main__":
                 .getOrCreate()
 
     path = '../kafka_files/twitterstream_0.jsonl'
-    schema = StructType([
-                StructField('Text' , StringType(), False),
-    ])
     df = spark.read.json(path, columnNameOfCorruptRecord='Text')
 
     #construct udf
     ads_filter = udf(filter_ads, BooleanType())
-
     ads_free = df.filter(ads_filter(df.Text))
 
     #remove punctuation

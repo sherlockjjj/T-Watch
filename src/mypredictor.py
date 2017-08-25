@@ -1,4 +1,5 @@
 import re, os, sys, time
+from utils import *
 from stat import ST_CTIME
 import pymongo
 from pymongo import MongoClient
@@ -27,7 +28,7 @@ class myPredictor():
         self.remover = StopWordsRemover(inputCol="Words", outputCol="filtered")
 
         print ("Checking ... \n")
-        get_collection_count()
+        print_collection_count()
 
     def _add_path(self):
         self.input_path = '../kafka_files/twitterstream_{}.jsonl'
@@ -67,36 +68,24 @@ class myPredictor():
         for path in self.input_files:
             time.sleep(2)
             output = self.predict_one(path, count)
-            get_collection_count()
+            print_collection_count()
             self.client.test.events.insert_many(spark.read.json(output))
 #             except:
 #                 print('Something Wrong with path {}'.format(path))
             count += 1
 
-#utils functions
-def filter_ads(text):
-    return 'https' not in text
 
-def preprocess(text):
-    words = re.sub("[^a-zA-Z]", " ", text).lower().split()
-    return words
-
-def find_input_files():
-    paths = []
-    for file in os.listdir("../kafka_files"):
-        if file.endswith(".jsonl"):
-            paths.append(os.path.join("../kafka_files/", file))
-    entries = [(os.stat(path)[ST_CTIME], path) for path in paths]
-    sorted_entries = sorted(entries)
-    return sorted_entries
-
-def get_collection_count():
+#print helpers
+def print_collection_count(client):
+    """
+    Print collection count of a client
+    """
     print ("number of collections is {}".format(client.test.events.count()))
-
 #             .config("spark.mongodb.input.database", db) \
 #             .config("spark.mongodb.input.collectionn", collection) \
 #             .config("spark.mongodb.output.database", db) \
 #             .config("spark.mongodb.output.collection", collection) \
+
 if __name__ == "__main__":
     client = MongoClient()
     db = client.test
@@ -110,7 +99,7 @@ if __name__ == "__main__":
 
     #get input stream files sorted by timestamp
     sorted_files = find_input_files()
-    
+
     #make prediction and store the output to ../predictions/
     pred = myPredictor()
     pred.add_input_files(sorted_files)

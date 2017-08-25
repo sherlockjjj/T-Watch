@@ -1,6 +1,10 @@
+"""
+A consumer class that could receive Kafka messages
+and store the messages in json lines 
+
+"""
 from kafka import KafkaConsumer
 import time
-from threading import Timer
 from utils import *
 
 class myConsumer():

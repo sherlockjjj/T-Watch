@@ -8,11 +8,7 @@ import pyspark
 import pyspark.streaming
 from pyspark import SparkConf, SparkContext
 from pyspark.streaming import StreamingContext
-from pyspark.streaming.kafka import KafkaUtils, OffsetRange, TopicAndPartition
-def txt_to_feature(text):
-    words = re.sub("[^a-zA-Z]", " ", text).lower().split()
-    clean_words = [ps.stem(w) for w in words if not w in stops]
-    return( " ".join(clean_words))
+from pyspark.streaming.kafka import KafkaUtils
 
 def main():
     PERIOD=10
@@ -31,21 +27,14 @@ def main():
         "metadata.broker.list": BROKERS,
       }
     )
-    #stream = KafkaUtils.createStream(ssc, 'cdh57-01-node-01.moffatt.me:2181', 'spark-streaming', {TOPIC:1})
 
-    # parsed = stream.map(lambda v: json.loads(v[1]))
-    object_stream = stream.map(lambda x: json.loads(x[1]))
-    output = object_stream.map(lambda x: json.loads(x)['text'])
+    tweets = stream.map(lambda x: json.loads(x[1])).map(lambda x: json.loads(x))
+    text = tweets.map(lambda x: x['text'])
+
     print ("Streaming ...")
-
-    count_stream = stream.map(txt_to_feature) \
-                         .map(lambda string: len(str))
-
-    output.pprint()
+    text.pprint()
     ssc.start()
     ssc.awaitTermination()
-
-
 
 if __name__ == '__main__':
     main()

@@ -1,24 +1,19 @@
+"""
+This script trains model for a labeled sentiment twitter dataset of over 1 million tweets
+"""
 #PYTHON=3.5
-import pandas as pd
-import re
-import string
-from datetime import datetime
+from utils import preprocess
+import re, string
 import findspark
 findspark.init()
 import pyspark as ps
 from pyspark.sql.types import *
-from pyspark.sql.functions import array_contains, col, udf, when, coalesce, array
-from pyspark.ml import Pipeline
-from pyspark.ml.feature import Tokenizer, HashingTF, IDF, CountVectorizer, IDFModel, StopWordsRemover
-from pyspark.ml.classification import RandomForestClassifier, LogisticRegression
+from pyspark.sql.functions import col, udf
+#from pyspark.ml import Pipeline
+from pyspark.ml.feature import HashingTF, IDF, IDFModel, StopWordsRemover
+from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
-from pyspark.ml.feature import HashingTF, Tokenizer
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, ParamGridBuilder, TrainValidationSplit
-
-
-def preprocess(text):
-    words = re.sub("[^a-zA-Z]", " ", text).lower().split()
-    return words
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, TrainValidationSplit
 
 if __name__ == "__main__":
     spark = ps.sql.SparkSession.builder \

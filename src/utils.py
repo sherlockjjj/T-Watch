@@ -1,5 +1,6 @@
-import codecs, json
-
+import codecs, json, re, os
+from stat import ST_CTIME
+#IO helpers
 def write_json_file(obj, path):
     """
     Dump an object and write it out as JSON to a file
@@ -36,17 +37,25 @@ def read_json_lines_file(path):
         ary.append(record)
     return ary
 
-def demo():
-    path = 'tmp/test.jsonl'
+def find_input_files():
+    """
+    Find all files in a folder and sort by time
+    """
+    paths = []
+    for file in os.listdir("../kafka_files"):
+        if file.endswith(".jsonl"):
+            paths.append(os.path.join("../kafka_files/", file))
+    entries = [(os.stat(path)[ST_CTIME], path) for path in paths]
+    sorted_entries = sorted(entries)
+    return sorted_entries
 
-    ary_of_objects = [
-        {'name': 'a', 'title': 'CEO'},
-        {'name': 'b', 'title': 'VP'},
-        {'name': 'c', 'title': 'CMO'}
-    ]
+#nlp helpers
+def filter_ads(text):
+    """
+    Filter tweets with hyper links
+    """
+    return 'https' not in text
 
-    single_object = {'name': 'a', 'title': 'CEO'}
-    write_json_file(ary_of_objects, path)
-    obj = read_json_file(path)
-    print (obj)
-    pass
+def preprocess(text):
+    words = re.sub("[^a-zA-Z]", " ", text).lower().split()
+    return words
