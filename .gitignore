@@ -6,3 +6,4 @@ tmp/*
 kafka_files/*
 src/.ipynb_checkpoints/*
 src/*.pyc
+scripts/*.pem

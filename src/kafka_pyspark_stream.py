@@ -1,5 +1,11 @@
 import json
-import sys, os, re
+import sys, os, re, ast
+import findspark
+# Add the streaming package and initialize
+findspark.add_packages(["org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0"])
+findspark.init()
+import pyspark
+import pyspark.streaming
 from pyspark import SparkConf, SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils, OffsetRange, TopicAndPartition
@@ -9,14 +15,6 @@ def txt_to_feature(text):
     return( " ".join(clean_words))
 
 def main():
-
-    import findspark
-        # Add the streaming package and initialize
-    findspark.add_packages(["org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0"])
-    findspark.init()
-    import pyspark
-    import pyspark.streaming
-
     PERIOD=10
     BROKERS='localhost:9092'
     TOPIC= 'twitterstream'
@@ -31,18 +29,19 @@ def main():
       [TOPIC],
       {
         "metadata.broker.list": BROKERS,
-        "group.id": "0",
       }
     )
     #stream = KafkaUtils.createStream(ssc, 'cdh57-01-node-01.moffatt.me:2181', 'spark-streaming', {TOPIC:1})
 
     # parsed = stream.map(lambda v: json.loads(v[1]))
-    #object_stream = stream.map(lambda x: x[7])
-    print "before pprint"
+    object_stream = stream.map(lambda x: json.loads(x[1]))
+    output = object_stream.map(lambda x: json.loads(x)['text'])
+    print ("Streaming ...")
+
     count_stream = stream.map(txt_to_feature) \
                          .map(lambda string: len(str))
 
-    stream.pprint()
+    output.pprint()
     ssc.start()
     ssc.awaitTermination()
 
