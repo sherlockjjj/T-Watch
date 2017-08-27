@@ -7,7 +7,12 @@ Finished:
 2. Save Kafka output to local
 3. Trained Sentiment Classification Model on Spark ML 
 4. Used saved model parameters to predict saved incoming twitter streams
+5. Stored incoming streams to MongoDB
+6. Fetch data from MongoDB to publish web app using flask
 
-Difficulty:
-1. Integrate Kafka Stream with Pyspark Streaming
-2. Directly write spark dataframe to mongodb
+Difficulties:
+
+
+To-dos:
+
+
