@@ -1,18 +1,32 @@
-# capstone
+# Real Time Twitter Stream
 
-capstone project in progress
+## Status:
 
-Finished:
-1. Collecting Twitter Stream through Kafka
-2. Save Kafka output to local
-3. Trained Sentiment Classification Model on Spark ML 
-4. Used saved model parameters to predict saved incoming twitter streams
-5. Stored incoming streams to MongoDB
-6. Fetch data from MongoDB to publish web app using flask
+### MVP finished
+### Iterations in progress
 
-Difficulties:
+## Finished:
+
+### Model Training:
+1. Training tfidf and random forest model using pipeline on spark ML
+2. Saving models to local
+
+### Real Time Analysis:
+1. Collecting real time twitter streams through Kafka
+2. Saving Kafka output to local
+3. Loading saved model to predict incoming streams in spark streaming
+4. Storing incoming streams to MongoDB in spark streaming
+5. Fetching data from MongoDB and publishing results on web application via flask
+
+## Difficulties:
 
 
-To-dos:
+## To-dos:
 
 
+## Tools:
+### AWS EC2 EMR S3 
+### Kafka
+### Spark (spark streaming, spark sql, spark ml)
+### Flask
+### MongoDB
