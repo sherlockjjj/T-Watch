@@ -1,4 +1,4 @@
-# Real Time Twitter Stream
+# Real Time Twitter Stream Analysis via Kafka and Spark Streaming
 
 ## Status:
 
