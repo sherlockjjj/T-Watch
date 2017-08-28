@@ -1,4 +1,6 @@
+#capstone/src
 import json
+import sys
 import tweepy
 from kafka import KafkaProducer, KafkaClient
 from tweepy import OAuthHandler, Stream, API
@@ -14,10 +16,8 @@ class TstreamListener(StreamListener):
 
     def on_data(self, data):
         """
-        Called whenever new data arrives from live stream
+        Called whenever new data arrives as live stream
         """
-
-        #msg = status.text.encode('utf-8')
         text = json.loads(data)['text'].encode('utf-8')
         print (text)
         try:
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     #authenticate
     config = ConfigParser()
-    config.read('.config/.credentials')
+    config.read('../.config/.credentials')
     consumer_key = config.get('auth', 'consumer_key')
     consumer_secret = config.get('auth', 'consumer_secret')
     access_token = config.get('auth', 'access_token')
@@ -47,7 +47,10 @@ if __name__ == '__main__':
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     api = API(auth)
-
+    
     stream = Stream(auth, listener=TstreamListener(api))
-
-    stream.filter(track=['basketball'], locations=[-122.75,36.8,-121.75,37.8], languages=['en'])
+    try:
+        tracked = sys.argv[1:]
+    except:
+        tracked = ['basketball'] 
+    stream.filter(track=tracked, locations=[-122.75,36.8,-121.75,37.8], languages=['en'])

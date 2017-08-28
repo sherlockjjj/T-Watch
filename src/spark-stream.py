@@ -1,5 +1,7 @@
+#capstone/src 
+#command specifiy streaming time in mins
 import json, os
-import boto
+import time, sys
 import findspark
 # Add the streaming package and initialize
 findspark.add_packages(["org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0"])
@@ -11,11 +13,10 @@ from pyspark.streaming.kafka import KafkaUtils
 import pymongo_spark
 pymongo_spark.activate()
 from pymongo import MongoClient
-from configparser import ConfigParser
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
 from mypredictor import myStreamPredictor
 from pyspark.sql import Row
+import os
+from datetime import datetime 
 
 def predict_store(time, rdd):
     """
@@ -25,24 +26,27 @@ def predict_store(time, rdd):
     # Convert RDD[String] to RDD[Row] to DataFrame
     rowRdd = rdd.map(lambda w: Row(**w))
     df = spark.createDataFrame(rowRdd, ['id', 'screen_name','text'])
+    
+    #make prediction use saved model
     prediction = pred.predict(df)
     prediction.show()
+    
+    #save as jsonl.gz
+    path = '/home/ubuntu/capstone/stream_data/{}'.format(os.environ['Today'])
+    #hadoop doesn't support colon in file naming 
+    convert_time = time.strftime('%H-%M-%S')
+    despath = os.path.join(path, "{}.jsonl.gz".format(convert_time))
+    prediction.toJSON().saveAsTextFile(despath, 'org.apache.hadoop.io.compress.GzipCodec')
+    
+    #save to mongodb for publishing
     cols = ['id', 'screen_name', 'text', 'prediction']
     convert_dict = lambda x: {d:x[d] for d in cols}
     pred_rdd = prediction.rdd.map(convert_dict)
     pred_rdd.saveToMongoDB('mongodb://localhost:27017/streams.tweets')
 
 if __name__ == "__main__":
-    #authenticate
-    config = ConfigParser()
-    config.read('../.config/.credentials')
-    region = config.get('aws', 'region')
-    AWS_ACCESS_KEY_ID = config.get('aws', 'AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = config.get('aws', 'AWS_SECRET_ACCESS_KEY')
-    os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
-    os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
-
     #setting up environment
+    os.environ['Today'] = datetime.now().strftime('%Y-%m-%d')
     PERIOD=10
     BROKERS='localhost:9092'
     TOPIC= 'twitterstream'
@@ -64,7 +68,8 @@ if __name__ == "__main__":
     
     client = MongoClient()
     collection = client.streams.tweets
-    collection.drop()
+    print ("Before stream count is {}".format(collection.count()))
+        #collection.drop()
     client.close()
     
     #a new ssc needs to be started after a previous ssc is stopped
@@ -87,12 +92,21 @@ if __name__ == "__main__":
     text.foreachRDD(predict_store)
     ssc.start()
     
-    import time
-    time.sleep(5*60)
+    try:
+        stream_time = int(sys.argv[1])
+    except: 
+        stream_time = 5
+        
+    time.sleep(stream_time*60)
+    
     ssc.stop(stopSparkContext=False, stopGraceFully=True)
+    
+    #print after stream collection count
     client = MongoClient()
-    print (client.streams.tweets.count())
+    print ("After Stream Count is {}".format(client.streams.tweets.count()))
     client.close()
+    
+    
     
     
 
