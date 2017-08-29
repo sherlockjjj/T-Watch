@@ -1,28 +1,7 @@
-<!DOCTYPE = html>
-<html>
-  <head>
-    <meta charset='utf-8'>
-    <title>Twitter Sentiment Report</title>
-    <style>
-      body {
-        background-color: lightblue;
-      }
-      h1 {
-        color: white;
-        text-align: center;
-      }
-      p {
-        font-family: verdana;
-        font-size: 20px;
-        color:
-        text-align: center;
-      }
-    </style>
-  </head>
-  <body>
+{% extends "base.html" %}
+{% block body %}
     <h1>Welcome to Real Time Twitter Sentiment Analysis</h1>
     <p>Total tweets: {{total}}</p>
     <p>Number of positive tweets: {{positive}}</p>
     <p>Number of negative tweets: {{negative}}</p>
-  </body>
-</html>
+{% endblock %}

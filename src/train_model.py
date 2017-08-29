@@ -1,26 +1,35 @@
 """
-This script trains model for a labeled sentiment twitter dataset of over 1 million tweets
+Author:
+Joseph Fang
+
+Description:
+The original script was used to train model for a labeled sentiment twitter dataset of over 1 million tweets
+When in production, we use this in the airflow that could be executed daily/weekly to update model
+base_path could be the path for training data
 """
-#PYTHON=3.5
 from utils import preprocess
-import re, string
-import findspark
-findspark.init()
-import pyspark as ps
-from pyspark.sql.types import *
-from pyspark.sql.functions import col, udf
-#from pyspark.ml import Pipeline
-from pyspark.ml.feature import HashingTF, IDF, IDFModel, StopWordsRemover
-from pyspark.ml.classification import RandomForestClassifier
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, TrainValidationSplit
+import sys, os, re
+import datetime, iso8601
 
-if __name__ == "__main__":
-    spark = ps.sql.SparkSession.builder \
+def main(base_path):
+    
+    APP_NAME = 'train_model'
+    try :
+        sc and spark
+    except NameError as e:
+        import findspark
+        findspark.init() 
+        import pyspark
+        spark = pyspark.sql.SparkSession.builder \
             .master("local[4]") \
-            .appName('Model Training') \
+            .appName('train model') \
             .getOrCreate()
-
+    
+    PROJECT_HOWE = "/home/ubuntu/capstone/"
+    
+    #loading data as the desired format
+    from pyspark.sql.types import *
+    from pyspark.sql.functions import col, udf
     schema = StructType([
             StructField('NewIndex' , IntegerType(), False),
             StructField('Index' , IntegerType(), False),
@@ -28,16 +37,22 @@ if __name__ == "__main__":
             StructField('Sentiment' , IntegerType(), False),
             StructField('SentimentSource' , StringType(), False),
             StructField('SentimentText' , StringType(), False),
-        ])
-
-    filename = "../data/nokaggle-Sentiment-Analysis-Dataset.csv"
+    ])
+    
+    filename = PROJECT_HOME + "nokaggle-Sentiment-Analysis-Dataset.csv"
     users = spark.read.csv(filename, header=True, schema=schema)
-    #users.printSchema()
-    #users.show(5)
-
+    
+    
+    #model training stages 
+    from pyspark.ml import Pipeline
+    from pyspark.ml.feature import HashingTF, IDF, IDFModel, StopWordsRemover
+    from pyspark.ml.classification import RandomForestClassifier
+    from pyspark.ml.evaluation import BinaryClassificationEvaluator
+    from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, TrainValidationSplit
+    
     pp_udf = udf(preprocess, ArrayType(StringType()))
     words = users.withColumn('Words', pp_udf(users.SentimentText))
-    #words.printSchema()
+    
     #remove stop words
     remover = StopWordsRemover(inputCol="Words", outputCol="filtered")
     removed = remover.transform(words)
@@ -48,19 +63,17 @@ if __name__ == "__main__":
     #perform term frequency
     hashingTF = HashingTF(inputCol="filtered", outputCol="rawFeatures", numFeatures=200)
     featurized = hashingTF.transform(filled_featurized)
-    #featurized.select('rawFeatures').show(truncate=False)
 
     #perform idf
     featurized.cache()
     idf = IDF(inputCol="rawFeatures", outputCol="features")
     model = idf.fit(featurized)
     result = model.transform(featurized)
-    #result.limit(10).select('features').show(truncate=False)
 
     #save idf and idf model
-    idf_path = '../tmp/idf'
+    idf_path = PROJECT_HOME + 'tmp/idf'
     idf.save(idf_path)
-    idfmodel_path = '../tmp/idfmodel'
+    idfmodel_path = PROJECT_HOME + 'tmp/idfmodel'
     model.save(idfmodel_path)
     #load via following
     #loadedModel = IDFModel.load(idfmodel_path)
@@ -73,8 +86,6 @@ if __name__ == "__main__":
     train, test = result.randomSplit([0.8, 0.2], seed=42)
 
     # Configure an ML pipeline, which consists of tree stages: hashingTF, idf and RandomForestClassifier.
-    #remover = StopWordsRemover(inputCol="Words", outputCol="filtered")
-    #hashingTF = HashingTF(inputCol=tokenizer.getOutputCol(), outputCol="features")
     rf = RandomForestClassifier(labelCol="label", seed=42)
     pipeline = Pipeline(stages=[rf])
 
@@ -92,9 +103,7 @@ if __name__ == "__main__":
     # Make predictions on test documents. cvModel uses the best model found (lrModel).
     prediction = cvModel.transform(test)
     selected = prediction.select("SentimentText", "probability", "prediction")
-    # selected.printSchema()
-    # selected.show(5)
-
+    
     #cv score
     print (cvModel.avgMetrics)
     #test score
@@ -103,5 +112,7 @@ if __name__ == "__main__":
     cvModel.getEstimatorParamMaps()
 
     #save model
-    cv_path = '../tmp/cv'
+    cv_path = PROJECT_HOME + 'tmp/cv'
     cvModel.bestModel.save(cv_path)
+if __name__ == "__main__":
+    main(sys.argv[1])
