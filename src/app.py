@@ -1,13 +1,23 @@
 from flask import Flask, render_template, request
-import json
+import json, ast
 from pymongo import MongoClient
 from utils import team_dict
 from datetime import datetime
 from collections import Counter
+import plotly 
+import plotly.plotly as py
+import plotly.graph_objs as go
+import operator 
+
 app = Flask(__name__)
 
 client = MongoClient()
 collection = client.streams.nba
+
+#setting up plotly
+with open('/home/ubuntu/.plotly/.credentials') as f:
+    file = ast.literal_eval(f.read())
+plotly.tools.set_credentials_file(username=file['username'], api_key=file['api_key'])
 
 @app.route('/')
 def hello():
@@ -55,13 +65,25 @@ def find_team_with_followers(team, followers):
     team_tweets = collection.find({'teams': topic, 'followers': {'gte': int(followers)}}).sort('created_at', -1).limit(40)
     return render_template('table.html', tweets_count=team_tweets.count(), topic=team, tweets=list(team_tweets))
 
-@app.route('/chart')
+@app.route('/topic_counts_chart')
 def topic_counts_chart():
     topic_counts = collection.find()
     topic_counts = list(map(lambda x: x['teams'], topic_counts))
-    d = dict(Counter(topic_counts))
-    d_list = [{'topic': k, 'counts': v} for k,v in d.items()]
-    return render_template('topic_counts_chart.html', counts=d_list)
+    d = dict(Counter(topic_counts))    
+    sorted_x = sorted(d.items(), key=operator.itemgetter(1))
+    x = []
+    y = []
+    for a, b in sorted_x:
+        x.append(a)
+        y.append(b)
+    #plot 
+    data = [go.Bar(
+            x=x,
+            y=y
+    )]
+    url = py.plot(data, filename='basic-bar')
+    url += '.embed'
+    return render_template('chart.html', chart_url=url)
 
 @app.route('/topic_counts_chart.json')
 def topic_counts_json():

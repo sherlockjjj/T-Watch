@@ -18,6 +18,10 @@ from pymongo import MongoClient
 from mypredictor import myStreamPredictor
 from pyspark.sql import Row
 
+#trending topic extraction
+from nltk import pos_tag
+from nltk.tokenize import word_tokenize, RegexpTokenizer
+
 def predict_store(time, rdd):
     """
     predict and store incoming streams
@@ -47,6 +51,15 @@ def predict_store(time, rdd):
         pred_rdd = prediction.rdd.map(convert_dict)
         pred_rdd.saveToMongoDB('mongodb://localhost:27017/streams.nba')
 
+def find_trends(text):
+    words = []
+    for w in text.split():
+        if not w.startswith('@') and not w.startswith('#') and w != 'RT':
+            words.append(w)
+    words = tokenizer.tokenize((" ").join(words))        
+    word_tags = pos_tag(words)
+    return [word for word, tag in word_tags if tag == 'NN']
+   
 def save_raw(time, rdd):
     if not rdd.isEmpty():
         rdd.saveToMongoDB('mongodb://localhost:27017/streams.rawnba')
@@ -82,6 +95,7 @@ if __name__ == "__main__":
 
     #initialize predictor
     pred = myStreamPredictor() 
+    tokenizer = RegexpTokenizer(r'\w+')
     
     client = MongoClient()
     collection = client.streams.nba
@@ -110,6 +124,8 @@ if __name__ == "__main__":
     #tweets.pprint()
     features.pprint()
     
+    #find trending topic
+    #filtered_tweets.foreachRDD(lambda x: find_trends(x['text']))
     #store raw tweets
     tweets.foreachRDD(save_raw)
     

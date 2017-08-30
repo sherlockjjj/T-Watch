@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
 <style>
-
 .chart rect {
   fill: yellow;
 }
@@ -11,11 +10,10 @@
   font: 10px sans-serif;
   text-anchor: middle;
 }
-
 </style>
-  <div>
+<div>
     <p class="lead">Total Mentions by Topic</p>
-    <div id="chart"><svg class="chart"></svg></div>
-  </div>
-  <script src="/static/app.js"></script>
+    <iframe width="1200" height="600" frameborder="0" scrolling="no" src={{ chart_url }}></iframe>
+</div>
+    
 {% endblock %}

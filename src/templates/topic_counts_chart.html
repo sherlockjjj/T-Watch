@@ -15,7 +15,7 @@
               <th>Mentions</th>
           </thead>
           <tbody>
-            {% for c in counts %}
+            {% for c in topic_counts %}
             <tr>     
               <td><a href="/team={{ c.topic }}">{{ c.topic }}</a></td>  
               <td>{{ c.counts }}</td>

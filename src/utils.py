@@ -110,5 +110,10 @@ def filter_ads(text):
     return 'https' not in text
 
 def preprocess(text):
-    words = re.sub("[^a-zA-Z]", " ", text).lower().split()
-    return words
+    words = []
+    for w in text.split:
+        if not w.startswith('@') and not w.startswith('#') and w != 'RT':
+            words.append(w) 
+    word_str = (" ").join(words)        
+    clean_words = re.sub("[^a-zA-Z]", " ", word_str).lower().split()
+    return clean_words
