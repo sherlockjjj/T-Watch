@@ -1,23 +1,32 @@
 {% extends "base.html" %}
 {% block body %}
+  <body>
     <div id="wrap">
       <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
-          <h1>Negative Tweets Reports</h1>
+          <h1>Tweets Reports</h1>
         </div>
-        <p class="lead">Tweets</p>
+         
+        <p class="lead">Found {{ tweets_count }} {{ topic }} Tweets</p>
+        <p><a href="/summary">Home</a></p>   
         <table class="table">
           <thead>
+              <th>Teams</th>
               <th>User</th>
               <th>Text</th>
+              <th>Followers Count</th>
+              <th>Created Time</th>
               <th>Prediction</th>
           </thead>
           <tbody>
             {% for t in tweets -%}
-            <tr>
+            <tr>     
+              <td><a href="/team={{t.teams}}">{{t.teams}}</a></td>  
               <td>{{t.screen_name}}</td>
               <td>{{t.text}}</td>
+              <td>{{t.followers}}</td>
+              <td>{{t.created_at}}</td>  
               <td>{{t.prediction}}</td>  
             </tr>
             {% endfor -%}
@@ -27,5 +36,6 @@
 
       <div id="push"></div>
     </div>
-    <script src="/static/bootstrap.min.js"></script> 
+    <script src="/static/bootstrap.min.js"></script>
+  </body>  
 {% endblock %}

@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block body %}
+  <body>
     <h1>Welcome to Real Time Twitter Sentiment Analysis</h1>
     <p>Total tweets: {{total}}</p>
-    <p>Number of positive tweets: {{positive}}</p>
-    <p>Number of negative tweets: {{negative}}</p>
+    <p>Found <a href="/positive" >{{ positive }}</a> positive tweets</p>
+    <p>Found <a href="/negative" >{{ negative }}</a> negative tweets</p>
+    <p><a href="/topics">Check Topics</a></p>  
+    <p><a href="/chart">Chart for Each Topic</a></p>    
+  </body>
 {% endblock %}

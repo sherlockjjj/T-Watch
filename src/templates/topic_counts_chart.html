@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block body %}
+  <body>
+    <div id="wrap">
+      <!-- Begin page content -->
+      <div class="container">
+        <div class="page-header">
+          <h1>Tweets Reports</h1>
+        </div> 
+        <p class="lead">Chart of tweets for each topic</p>
+        <p><a href="/summary">Home</a></p>   
+        <table class="table">
+          <thead>
+              <th>Team</th>
+              <th>Mentions</th>
+          </thead>
+          <tbody>
+            {% for c in counts %}
+            <tr>     
+              <td><a href="/team={{ c.topic }}">{{ c.topic }}</a></td>  
+              <td>{{ c.counts }}</td>
+            </tr>
+            {% endfor -%}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="push"></div>
+    </div>
+    <script src="/static/bootstrap.min.js"></script>
+  </body>  
+{% endblock %}

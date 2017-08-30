@@ -6,6 +6,7 @@ from kafka import KafkaProducer, KafkaClient
 from tweepy import OAuthHandler, Stream, API
 from tweepy.streaming import StreamListener
 from configparser import ConfigParser
+from utils import team_dict
 
 class TstreamListener(StreamListener):
     def __init__(self, api):
@@ -35,10 +36,10 @@ class TstreamListener(StreamListener):
         return True
 
 if __name__ == '__main__':
-
+    PROJECT_HOME = '/home/ubuntu/capstone/'
     #authenticate
     config = ConfigParser()
-    config.read('../.config/.credentials')
+    config.read(PROJECT_HOME + '.config/.credentials')
     consumer_key = config.get('auth', 'consumer_key')
     consumer_secret = config.get('auth', 'consumer_secret')
     access_token = config.get('auth', 'access_token')
@@ -49,8 +50,8 @@ if __name__ == '__main__':
     api = API(auth)
     
     stream = Stream(auth, listener=TstreamListener(api))
-    try:
-        tracked = sys.argv[1:]
-    except:
-        tracked = ['basketball'] 
-    stream.filter(track=tracked, locations=[-122.75,36.8,-121.75,37.8], languages=['en'])
+ 
+    tracked = []
+    for team in team_dict.keys():
+        tracked.extend(team_dict[team]) 
+    stream.filter(track=tracked, languages=['en'])

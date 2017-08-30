@@ -1,38 +1,13 @@
 from flask import Flask, render_template, request
 import json
 from pymongo import MongoClient
-
+from utils import team_dict
+from datetime import datetime
+from collections import Counter
 app = Flask(__name__)
 
 client = MongoClient()
-collection = client.streams.tweets
-
-# Process elasticsearch hits and return flights records
-def process_search(results):
-    records = []
-    if results['hits'] and results['hits']['hits']:
-        total = results['hits']['total']
-        hits = results['hits']['hits']
-        for hit in hits:
-            record = hit['_source']
-            records.append(record)
-    return records, total
-
-# Calculate offsets for fetching lists of flights from MongoDB
-def get_navigation_offsets(offset1, offset2, increment):
-    offsets = {}
-    offsets['Next'] = {'top_offset': offset2 + increment, 'bottom_offset': offset1 + increment}
-    offsets['Previous'] = {'top_offset': max(offset2 - increment, 0),\
-                           'bottom_offset': max(offset1 - increment, 0)} 
-    return offsets
-
-# Strip the existing start and end parameters from the query string
-def strip_place(url):
-    try:
-        p = re.match('(.+)&start=.+&end=.+', url).group(1)
-    except AttributeError as e:
-        return url
-    return p
+collection = client.streams.nba
 
 @app.route('/')
 def hello():
@@ -45,16 +20,56 @@ def summary():
     positive_counts = collection.find({'prediction': 1}).count()
     return render_template('result.html',total=total_counts, positive=positive_counts, negative=negative_counts) 
 
-@app.route('/table', methods=['GET', 'POST'])
-def table():
-    start = request.args.get('start') or 0
-    start = int(start)
-    end = request.args.get('end') or 20
-    end = int(end)
-    width = end - start
-    nav_offsets = get_navigation_offsets(start, end, 20):
-    neg_tweets = collection.find({'prediction': 0}).skip(start).limit(width)
-    return render_template('table.html', tweets=list(neg_tweets))
-        
+@app.route('/topics', methods=['GET', 'POST'])
+def topics():
+    return render_template('topics.html', teams=list(team_dict.keys()))
+    
+@app.route('/negative', methods=['GET', 'POST'])
+def find_negative():
+    neg_tweets = collection.find({'prediction': 0}).sort('created_at', -1).limit(40)
+    return render_template('table.html', tweets_count=neg_tweets.count(), topic='Negative', tweets=list(neg_tweets))
+
+@app.route('/positive', methods=['GET', 'POST'])
+def find_positive():
+    pos_tweets = collection.find({'prediction': 1}).sort('created_at', -1).limit(40)
+    return render_template('table.html', tweets_count=pos_tweets.count(), topic='Positive', tweets=list(pos_tweets))
+
+@app.route('/team=<team>')
+def find_team(team):
+    team = " ".join(team.split("%20"))
+    team_tweets = collection.find({'teams': team}).sort('created_at', -1).limit(40)
+    return render_template('table.html', tweets_count=team_tweets.count(), topic=team, tweets=list(team_tweets))
+
+@app.route('/search')
+@app.route('/search/')
+def search():
+    #search parameters
+    topics = request.args.get('topic')
+    followers = request.args.get('followers')
+    return render_template('search.html')
+
+#not working right now
+@app.route('/team=<topic>/followers=<followers>')  
+def find_team_with_followers(team, followers):
+    team = " ".join(team.split("%20"))
+    team_tweets = collection.find({'teams': topic, 'followers': {'gte': int(followers)}}).sort('created_at', -1).limit(40)
+    return render_template('table.html', tweets_count=team_tweets.count(), topic=team, tweets=list(team_tweets))
+
+@app.route('/chart')
+def topic_counts_chart():
+    topic_counts = collection.find()
+    topic_counts = list(map(lambda x: x['teams'], topic_counts))
+    d = dict(Counter(topic_counts))
+    d_list = [{'topic': k, 'counts': v} for k,v in d.items()]
+    return render_template('topic_counts_chart.html', counts=d_list)
+
+@app.route('/topic_counts_chart.json')
+def topic_counts_json():
+    topic_counts = collection.find()
+    topic_counts = list(map(lambda x: x['teams'], topic_counts))
+    d = dict(Counter(topic_counts))
+    d_list = [{'topic': k, 'counts': v} for k,v in d.items()]
+    return json.dumps(d_list, ensure_ascii=False)
+
 if __name__ == '__main__':
     app.run(debug=True)

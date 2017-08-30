@@ -34,7 +34,7 @@ class myStreamPredictor():
         removed = self.remover.transform(words)
         featureized = self.hashingTF.transform(removed)
         result = self.idfmodel.transform(featureized)
-        prediction = self.rf.transform(result).select('id', 'screen_name', 'text', 'prediction')
+        prediction = self.rf.transform(result)
         return prediction
 
 

@@ -1,0 +1,42 @@
+<!DOCTYPE = html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Twitter Sentiment Report</title>
+    <style>
+      body {
+        background-color: lightblue;
+      }
+      h1 {
+        color: white;
+        text-align: center;
+      }
+      p {
+        font-family: verdana;
+        font-size: 20px;
+        color:
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <!-- Begin page content -->
+      <div class="container">
+        <div class="page-header">
+          <h1>Tweets Search</h1>
+        </div>
+        <p><a href="/summary">Home</a></p>
+        <form action="/team={{ topic }}/followers={{ followers}}" method="get">
+            <label for="topic">topic</label>
+            <input name="topic" maxlength="20" style="width: 128px; margin-right: 10px;" value="{{topic if topic else ''}}"></input>
+            <label for="followers">followers</label>
+            <input name="followers" maxlength="10" style="width: 128px; margin-right: 10px;" value="{{followers if followers else 0}}"></input>
+        <button type="submit" class="btn btn-xs btn-default" style="height: 25px">Submit</button>
+        </form>  
+      </div>
+      <div id="push"></div>
+    </div>
+    <script src="/static/bootstrap.min.js"></script>
+  </body>  
+</html>

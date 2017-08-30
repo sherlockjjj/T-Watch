@@ -19,6 +19,10 @@
       }
     </style>
   </head>
-  {% block body %}
-  {% endblock %} 
+  <body>
+    <h1>Topics</h1>   
+    {% for team in teams %}
+      <p><a href="/team={{ team }}">{{ team }}</a></p>
+    {% endfor %} 
+  </body>
 </html>
