@@ -12,7 +12,7 @@
 5. Fetching data from MongoDB and publishing results on web application via flask
 
 ### Data Flow
-![alt text](https://raw.githubusercontent.com/sherlockjjj/capstone/images/data_flow.png)
+![Real Time Data Flow](https://github.com/sherlockjjj/capstone/blob/master/images/data_flow.png)
 
 ## Tools:
 ### AWS EC2 EMR S3, SES
