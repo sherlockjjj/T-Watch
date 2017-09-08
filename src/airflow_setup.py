@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 import iso8601
 
 PROJECT_HOME = os.environ["PROJECT_HOME"]
-
+EMAIL = os.environ["MY_EMAIL"]
 default_args = {
   'owner': 'airflow',
   'depends_on_past': False,
   'start_date': iso8601.parse_date("2017-08-28"),
-  'email': ['yfangfh15@gmail.com'],
+  'email': [EMAIL],
   'email_on_failure': True,
   'email_on_retry': True,
   'retries': 3,
@@ -24,7 +24,7 @@ training_dag = DAG(
   default_args=default_args
 )
 
-# We use the same two commands for all our PySpark tasks
+# Save two commands for all our PySpark tasks
 pyspark_bash_command = """
 spark-submit --master {{ params.master }} \
   {{ params.base_path }}/{{ params.filename }} \
@@ -63,7 +63,7 @@ fetch_prediction_requests_operator = BashOperator(
   bash_command = pyspark_date_bash_command,
   params = {
     "master": "local[8]",
-    "filename": "ch08/fetch_prediction_requests.py",
+    "filename": "fetch_prediction_requests.py",
     "base_path": "{}/".format(PROJECT_HOME)
   },
   dag=daily_prediction_dag
@@ -75,7 +75,7 @@ make_predictions_operator = BashOperator(
   bash_command = pyspark_date_bash_command,
   params = {
     "master": "local[8]",
-    "filename": "ch08/make_predictions.py",
+    "filename": "make_predictions.py",
     "base_path": "{}/".format(PROJECT_HOME)
   },
   dag=daily_prediction_dag
@@ -87,7 +87,7 @@ load_prediction_results_operator = BashOperator(
   bash_command = pyspark_date_bash_command,
   params = {
     "master": "local[8]",
-    "filename": "ch08/load_prediction_results.py",
+    "filename": "load_prediction_results.py",
     "base_path": "{}/".format(PROJECT_HOME)
   },
   dag=daily_prediction_dag
