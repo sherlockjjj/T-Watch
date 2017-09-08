@@ -1,23 +1,25 @@
-from flask import Flask, render_template, request
 import json, ast
+import plotly
+from flask import Flask, render_template, request
 from pymongo import MongoClient
 from utils import team_dict
 from datetime import datetime
 from collections import Counter
-import plotly 
 import plotly.plotly as py
 import plotly.graph_objs as go
-import operator 
+import operator
 
 app = Flask(__name__)
 
+#connect mongoDB database
 client = MongoClient()
 collection = client.streams.nba
 
-#setting up plotly
-with open('/home/ubuntu/.plotly/.credentials') as f:
-    file = ast.literal_eval(f.read())
-plotly.tools.set_credentials_file(username=file['username'], api_key=file['api_key'])
+#setting up plotly credentials
+plotly_key = os.environ['plotly_key']
+plotly_username = os.environ['plotly_username']
+
+plotly.tools.set_credentials_file(username=plotly_username, api_key=plotly_key)
 
 @app.route('/')
 def hello():
@@ -28,12 +30,12 @@ def summary():
     total_counts = collection.count()
     negative_counts = collection.find({'prediction': 0}).count()
     positive_counts = collection.find({'prediction': 1}).count()
-    return render_template('result.html',total=total_counts, positive=positive_counts, negative=negative_counts) 
+    return render_template('result.html',total=total_counts, positive=positive_counts, negative=negative_counts)
 
 @app.route('/topics', methods=['GET', 'POST'])
 def topics():
     return render_template('topics.html', teams=list(team_dict.keys()))
-    
+
 @app.route('/negative', methods=['GET', 'POST'])
 def find_negative():
     neg_tweets = collection.find({'prediction': 0}).sort('created_at', -1).limit(40)
@@ -58,8 +60,7 @@ def search():
     followers = request.args.get('followers')
     return render_template('search.html')
 
-#not working right now
-@app.route('/team=<topic>/followers=<followers>')  
+@app.route('/team=<topic>/followers=<followers>')
 def find_team_with_followers(team, followers):
     team = " ".join(team.split("%20"))
     team_tweets = collection.find({'teams': topic, 'followers': {'gte': int(followers)}}).sort('created_at', -1).limit(40)
@@ -69,14 +70,14 @@ def find_team_with_followers(team, followers):
 def topic_counts_chart():
     topic_counts = collection.find()
     topic_counts = list(map(lambda x: x['teams'], topic_counts))
-    d = dict(Counter(topic_counts))    
+    d = dict(Counter(topic_counts))
     sorted_x = sorted(d.items(), key=operator.itemgetter(1))
     x = []
     y = []
     for a, b in sorted_x:
         x.append(a)
         y.append(b)
-    #plot 
+    #plot
     data = [go.Bar(
             x=x,
             y=y

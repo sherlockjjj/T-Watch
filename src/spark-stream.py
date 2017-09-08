@@ -1,8 +1,8 @@
-#capstone/src 
+#capstone/src
 #command specifiy streaming time in mins
 import json, os
 import time, sys
-from datetime import datetime 
+from datetime import datetime
 from utils import tag_dict
 import findspark
 # Add the streaming package and initialize
@@ -32,7 +32,7 @@ def predict_store(time, rdd):
         cols = ['id', 'screen_name', 'text', 'followers', 'created_at', 'teams']
         rowRdd = rdd.map(lambda w: Row(id=w['id'], screen_name=w['screen_name'], \
                                        text=w['text'], followers=w['followers'], created_at=w['created_at'], teams=w['teams']))
-        
+
         df = spark.createDataFrame(rowRdd)
         #make prediction use saved model
         prediction = pred.predict(df)
@@ -40,7 +40,7 @@ def predict_store(time, rdd):
 
         #save as jsonl.gz
         path = '/home/ubuntu/capstone/stream_data/{}'.format(os.environ['Today'])
-        #hadoop doesn't support colon in file naming 
+        #hadoop doesn't support colon in file naming
         convert_time = time.strftime('%H-%M-%S')
         despath = os.path.join(path, "{}.jsonl.gz".format(convert_time))
         prediction.toJSON().saveAsTextFile(despath, 'org.apache.hadoop.io.compress.GzipCodec')
@@ -56,10 +56,10 @@ def find_trends(text):
     for w in text.split():
         if not w.startswith('@') and not w.startswith('#') and w != 'RT':
             words.append(w)
-    words = tokenizer.tokenize((" ").join(words))        
+    words = tokenizer.tokenize((" ").join(words))
     word_tags = pos_tag(words)
     return [word for word, tag in word_tags if tag == 'NN']
-   
+
 def save_raw(time, rdd):
     if not rdd.isEmpty():
         rdd.saveToMongoDB('mongodb://localhost:27017/streams.rawnba')
@@ -70,8 +70,8 @@ def find_teams(text):
         if tag in text:
             teams.add(tag_dict[tag])
     if teams:
-        return (" ").join(teams) 
-    return "Some Team" 
+        return (" ").join(teams)
+    return "Some Team"
 
 if __name__ == "__main__":
     #setting up environment
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     duration=100
     try:
         sc
-    except:    
+    except:
         conf = SparkConf().set("spark.default.paralleism", 1)
         spark = pyspark.sql.SparkSession.builder \
                                         .master("local[4]") \
@@ -94,15 +94,15 @@ if __name__ == "__main__":
         #create a streaming context with batch interval 10 sec
 
     #initialize predictor
-    pred = myStreamPredictor() 
+    pred = myStreamPredictor()
     tokenizer = RegexpTokenizer(r'\w+')
-    
+
     client = MongoClient()
     collection = client.streams.nba
     #collection.drop()
     print ("Before stream count is {}".format(collection.count()))
     client.close()
-    
+
     #a new ssc needs to be started after a previous ssc is stopped
     ssc = StreamingContext(sc, PERIOD)
 
@@ -115,36 +115,29 @@ if __name__ == "__main__":
               }
     )
     tweets = stream.map(lambda x: json.loads(x[1])).map(lambda x: json.loads(x))
-    
+
     #filter commercials
-    filtered_tweets = tweets.filter(lambda x: 'https' not in x['text'])   
+    filtered_tweets = tweets.filter(lambda x: 'https' not in x['text'])
     # DataFrame operations inside your streaming program
     features = filtered_tweets.map(lambda x: {'id': x['id'], 'screen_name': x['user']['screen_name'], 'text': x['text'], 'followers': x['user']['followers_count'], 'created_at': x['created_at'], 'teams': find_teams(x['text'])})
-    
+
     #tweets.pprint()
     features.pprint()
-    
+
     #find trending topic
-    #filtered_tweets.foreachRDD(lambda x: find_trends(x['text']))
+    filtered_tweets.foreachRDD(lambda x: find_trends(x['text']))
     #store raw tweets
     tweets.foreachRDD(save_raw)
-    
+
     #predict and store feature extracted tweets
     features.foreachRDD(predict_store)
     ssc.start()
-    
+
     try:
         stream_time = int(sys.argv[1])
-    except: 
+    except:
         stream_time = 5
-        
-    time.sleep(stream_time*60)
-    
-    ssc.stop(stopSparkContext=False, stopGraceFully=True)
-    
-    
-    
-    
 
-    
-    
+    time.sleep(stream_time*60)
+
+    ssc.stop(stopSparkContext=False, stopGraceFully=True)

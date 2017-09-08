@@ -1,3 +1,6 @@
+"""
+This is a demo of sending daily email to users
+"""
 import smtplib
 import os
 from email.mime.multipart import MIMEMultipart
@@ -5,8 +8,8 @@ from email.mime.text import MIMEText
 
 # AWS Config
 EMAIL_HOST = 'email-smtp.us-west-2.amazonaws.com'
-EMAIL_HOST_USER = 'foo'
-EMAIL_HOST_PASSWORD = 'bar'
+EMAIL_HOST_USER = os.environ['email_host_user']
+EMAIL_HOST_PASSWORD = os.environ['email_host_password']
 EMAIL_PORT = 587
 
 msg = MIMEMultipart('alternative')
