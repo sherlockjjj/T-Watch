@@ -75,19 +75,19 @@ make_predictions_operator = BashOperator(
   bash_command = pyspark_date_bash_command,
   params = {
     "master": "local[8]",
-    "filename": "make_predictions.py",
+    "filename": "spark-stream.py",
     "base_path": "{}/".format(PROJECT_HOME)
   },
   dag=daily_prediction_dag
 )
 
-# Load today's predictions to Mongo
+# Load today's predictions 
 load_prediction_results_operator = BashOperator(
   task_id = "pyspark_load_prediction_results",
   bash_command = pyspark_date_bash_command,
   params = {
     "master": "local[8]",
-    "filename": "load_prediction_results.py",
+    "filename": "app.py",
     "base_path": "{}/".format(PROJECT_HOME)
   },
   dag=daily_prediction_dag
