@@ -1,5 +1,8 @@
 # Real Time Twitter Stream Analysis via Kafka and Spark Streaming
 
+### Motivation:
+Build a data product that could process streaming data and has an end-to-end data pipeline that could be easily scaled upon request.
+
 ### Model Training:
 1. Training tfidf and random forest model using pipeline on spark ML
 2. Saving models to S3
